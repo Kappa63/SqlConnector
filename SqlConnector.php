@@ -11,14 +11,45 @@ header("Expires: 0");
 ini_set("precision", 17);
 ini_set("serialize_precision", -1);
 
-$SqlC = mysqli_connect($_GET["Server"], $_GET["Uid"], $_GET["Pwd"], $_GET["Db"]);
+$Ser = @$_GET["Server"];
+if (!$DSer){
+    echo "Missing Server parameter:: Undefined index";
+    exit();
+}
+$User = @$_GET["Uid"];
+if (!$User){
+    echo "Missing Uid parameter:: Undefined index";
+    exit();
+}
+$Pass = @$_GET["Pwd"];
+if (!$Pass){
+    echo "Missing Pwd parameter:: Undefined index";
+    exit();
+}
+$Db = @$_GET["Db"];
+if (!$Db){
+    echo "Missing Db parameter:: Undefined index";
+    exit();
+}
+$SqlC = mysqli_connect($Ser, $User, $Pass, $Db);
 
 $RetType = $_POST["ResFormat"]; //Can be assoc, both, or index :: defaults to both ::
 $RetType = $RetType=="assoc"?MYSQLI_ASSOC:($RetType=="index"?MYSQLI_NUM:MYSQLI_BOTH);
-$QueryStr = $_POST["Query"];
-$Replaces = json_decode($_POST["Replace"]); // Replaces all '??' in the Query String with this data :: stringified array :: ex: '["R1", "R2"]'
-foreach($Replaces as $Rp)
-    $QueryStr = substr_replace($QueryStr, $Rp, strpos($QueryStr, "??"), 2);
+$QueryStr = @$_POST["Query"];
+if (!$QueryStr){
+    echo "Missing Query Data:: Undefined index";
+    exit();
+}
+$Replaces = @$_POST["Replace"]?json_decode($_POST["Replace"]):array(); // Replaces all '??' in the Query String with this data :: stringified array :: ex: '["R1", "R2"]'
+$Replaceables = ;
+if(substr_count($QueryStr, "??") == sizeof($Replaces)){
+    foreach($Replaces as $Rp)
+        $QueryStr = substr_replace($QueryStr, $Rp, strpos($QueryStr, "??"), 2);
+}
+else{
+    echo "Number of Replacements Doesn't Match Replaceables :: '??'";
+    exit();
+}
 
 $res = $SqlC->query($QueryStr);
 
